@@ -1,0 +1,21 @@
+{
+    "name": "chaoswd/weather",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Chaoswd\\Weather\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "jpgerber1986",
+            "email": "jordangerber@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^8.3",
+        "guzzlehttp/guzzle": "8.0.x-dev"
+    }
+}
