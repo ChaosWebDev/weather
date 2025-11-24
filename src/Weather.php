@@ -2,8 +2,6 @@
 
 namespace Chaoswd\Weather;
 
-use GuzzleHttp\Client;
-
 class Weather
 {
     public $alerts;
@@ -13,18 +11,11 @@ class Weather
     protected $headers;
     public $urls = [];
 
-    private $client;
-
-
     public function __construct(string $userAgent, public $lat, public $long)
     {
-        $this->client = new Client();
-
         $this->headers = [
-            'headers' => [
-                "User-Agent: {$userAgent}",
-                'Accept: application/geo+json'
-            ]
+            "User-Agent: {$userAgent}",
+            'Accept: application/geo+json'
         ];
 
         $this->urls['base'] = "https://api.weather.gov";
@@ -34,52 +25,87 @@ class Weather
         $this->getAlerts();
     }
 
-    protected function getURLs()
+    /** ------------------------------------------------------------------
+     *  INTERNAL CURL WRAPPER
+     * ------------------------------------------------------------------*/
+    protected function get(string $url): array
     {
-        $response = $this->client->get("{$this->urls['base']}/points/{$this->lat},{$this->long}", $this->headers);
+        $curl = curl_init();
 
-        $res = json_decode($response->getBody(), true);
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => $this->headers,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 10,
+        ]);
 
-        $this->urls['forecast'] = $res['properties']['forecast'];
-        $this->urls['hourly'] = $res['properties']['forecastHourly'];
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+
+        // For PHP 8.2-^8.3
+        // Depreciated in 8.4
+        curl_close($curl);
+
+        if ($err) {
+            throw new \Exception("CURL Error requesting {$url}: {$err}");
+        }
+
+        return json_decode($response, true);
     }
 
+    /** ------------------------------------------------------------------
+     *  Fetch forecast URLs
+     * ------------------------------------------------------------------*/
+    protected function getURLs()
+    {
+        $res = $this->get("{$this->urls['base']}/points/{$this->lat},{$this->long}");
+
+        $this->urls['forecast'] = $res['properties']['forecast'] ?? null;
+        $this->urls['hourly'] = $res['properties']['forecastHourly'] ?? null;
+    }
+
+    /** ------------------------------------------------------------------
+     *  Alerts
+     * ------------------------------------------------------------------*/
     public function getAlerts()
     {
-        if ($this->urls['alerts'] == "" || $this->urls['alerts'] == null) {
+        if (empty($this->urls['alerts'])) {
             $this->getURLs();
         }
 
-        $response = $this->client->get($this->urls['alerts'], $this->headers);
-        $res = json_decode($response->getBody(), true);
+        $res = $this->get($this->urls['alerts']);
         $this->alerts = $res['features'][0]['properties'] ?? [];
 
         return $this;
     }
 
+    /** ------------------------------------------------------------------
+     *  Daily Forecast
+     * ------------------------------------------------------------------*/
     public function getDailyForecast()
     {
-        if ($this->urls['alerts'] == "" || $this->urls['alerts'] == null) {
+        if (empty($this->urls['forecast'])) {
             $this->getURLs();
         }
 
-        $response = $this->client->get($this->urls['forecast'], $this->headers);
-        $res = json_decode($response->getBody(), true);
-        $this->daily = $res['properties']['periods'];
+        $res = $this->get($this->urls['forecast']);
+        $this->daily = $res['properties']['periods'] ?? [];
 
         return $this;
     }
 
+    /** ------------------------------------------------------------------
+     *  Hourly Forecast
+     * ------------------------------------------------------------------*/
     public function getHourlyForecast()
     {
-
-        if ($this->urls['alerts'] == "" || $this->urls['alerts'] == null) {
+        if (empty($this->urls['hourly'])) {
             $this->getURLs();
         }
 
-        $response = $this->client->get($this->urls['hourly'], $this->headers);
-        $res = json_decode($response->getBody(), true);
-        $this->hourly = $res['properties']['periods'];
+        $res = $this->get($this->urls['hourly']);
+        $this->hourly = $res['properties']['periods'] ?? [];
 
         return $this;
     }
