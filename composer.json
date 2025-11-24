@@ -1,6 +1,7 @@
 {
     "name": "chaoswd/weather",
     "type": "library",
+    "description": "A lightweight PHP library for interacting with the National Weather Service (weather.gov) API. Provides alerts, daily forecasts, and hourly forecasts using a simple OOP interface.",
     "license": "MIT",
     "autoload": {
         "psr-4": {
