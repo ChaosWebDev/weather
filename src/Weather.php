@@ -67,6 +67,19 @@ class Weather
         $res = json_decode($response->getBody(), true);
         $this->daily = $res['properties']['periods'];
 
+        return $this;
+    }
+
+    public function getHourlyForecast()
+    {
+
+        if ($this->urls['alerts'] == "" || $this->urls['alerts'] == null) {
+            $this->getURLs();
+        }
+
+        $response = $this->client->get($this->urls['hourly'], $this->headers);
+        $res = json_decode($response->getBody(), true);
+        $this->hourly = $res['properties']['periods'];
 
         return $this;
     }

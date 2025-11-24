@@ -17,7 +17,7 @@ $weather = new \Chaoswd\Weather\Weather("jordangerber@gmail.com", 45.87028, -108
 <body>
     <pre>
         <?php
-        print_r($weather->getDailyForecast()->daily);
+        print_r($weather);
         ?>
     </pre>
 </body>
