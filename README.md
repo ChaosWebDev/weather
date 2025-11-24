@@ -73,7 +73,7 @@ https://www.freemaptools.com/convert-us-zip-code-to-lat-lng.htm
 
 - PHP 8.3+
 - Composer
-- guzzlehttp/guzzle
+- CURL
 
 ---
 
